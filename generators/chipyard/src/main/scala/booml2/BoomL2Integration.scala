@@ -17,7 +17,7 @@ import sifive.blocks.inclusivecache._
 import coupledL2._
 import coupledL2.prefetch.BOPParameters
 import coupledL2.tl2tl.TL2TLCoupledL2
-import huancun.{PrefetchField, PrefetchKey}
+import huancun.{BankBitsKey => HuanCunBankBitsKey, PrefetchField, PrefetchKey}
 import utility.{
   LogUtilsOptions,
   LogUtilsOptionsKey,
@@ -262,14 +262,17 @@ class WithBoomCoupledL2 extends Config((site, here, up) => {
     replacement = "drrip",
     mshrs = 16,
     releaseData = 0,
-    prefetch = Seq(BOPParameters(virtualTrain = false)),
+    prefetch = Seq(BOPParameters(
+      virtualTrain = false,
+      enablePBOP = true,
+      enableVBOP = false)),
     enablePerf = false,
     enableRollingDB = false,
     enableMonitor = false,
     enableTLLog = false,
     enableCHILog = false,
     elaboratedTopDown = false)
-  case BankBitsKey => 2
+  case HuanCunBankBitsKey => 2
   case L2NBanksKey => 4
   case LogUtilsOptionsKey => LogUtilsOptions(
     enableDebug = false,

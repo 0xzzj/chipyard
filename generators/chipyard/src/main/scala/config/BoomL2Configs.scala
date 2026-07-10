@@ -3,6 +3,8 @@ package chipyard
 import org.chipsalliance.cde.config.Config
 
 private class WithBoomL2ExperimentMemory extends Config(
+  new testchipip.serdes.WithSerialTLBundleParams(
+    testchipip.serdes.TLSerdesser.STANDARD_TLBUNDLE_PARAMS.copy(sinkBits = 10)) ++
   new chipyard.config.WithExtMemIdBits(6) ++
   new freechips.rocketchip.subsystem.WithEdgeDataBits(256))
 
