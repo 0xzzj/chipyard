@@ -171,6 +171,22 @@ lazy val testchipip = withInitCheck(freshProject("testchipip", file("generators/
   .settings(libraryDependencies ++= rocketLibDeps.value)
   .settings(commonSettings)
 
+lazy val coupled_l2_utility = freshProject("coupled-l2-utility", file("CoupledL2/utility"))
+  .dependsOn(rocketchip)
+  .settings(libraryDependencies ++= rocketLibDeps.value)
+  .settings(libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.4.4")
+  .settings(commonSettings)
+
+lazy val huancun = freshProject("huancun", file("CoupledL2/HuanCun"))
+  .dependsOn(rocketchip, coupled_l2_utility)
+  .settings(libraryDependencies ++= rocketLibDeps.value)
+  .settings(commonSettings)
+
+lazy val coupled_l2 = freshProject("coupled-l2", file("CoupledL2"))
+  .dependsOn(rocketchip, coupled_l2_utility, huancun)
+  .settings(libraryDependencies ++= rocketLibDeps.value)
+  .settings(commonSettings)
+
 lazy val chipyard = {
   val useChisel7 = sys.env.contains("USE_CHISEL7")
   // Base chipyard project with always-on dependencies
@@ -181,6 +197,7 @@ lazy val chipyard = {
       icenet, tracegen,
       constellation, barf, shuttle, rerocc,
     ).map(sbt.Project.projectToRef) ++
+    (if (useChisel7) Seq(sbt.Project.projectToRef(coupled_l2)) else Seq()) ++
     (if (useChisel7) Seq() else Seq(sbt.Project.projectToRef(firrtl2_bridge))) ++
     (if (useChisel7) Seq() else Seq(sbt.Project.projectToRef(dsptools), sbt.Project.projectToRef(rocket_dsp_utils)))
 
@@ -207,6 +224,15 @@ lazy val chipyard = {
     }
   ) else Seq.empty
 
+  val coupledL2ExcludeSettings: Seq[Def.Setting[_]] = if (useChisel7) Seq.empty else Seq(
+    Compile / unmanagedSources := {
+      val files = (Compile / unmanagedSources).value
+      val excluded = (ThisBuild / baseDirectory).value /
+        "generators/chipyard/src/main/scala/booml2"
+      files.filterNot(_.getCanonicalFile.toPath.startsWith(excluded.getCanonicalFile.toPath))
+    }
+  )
+
   var cy = Project(id = "chipyard", base = file("generators/chipyard"))
     .dependsOn(baseDeps: _*)
     .settings(libraryDependencies ++= rocketLibDeps.value)
@@ -221,6 +247,7 @@ lazy val chipyard = {
       else file("tools/stage/src/main/scala")
     })
     .settings(dspExcludeSettings: _*)
+    .settings(coupledL2ExcludeSettings: _*)
 
   // Optional modules discovered via initialized submodules (no env or manifest)
   val optionalModules: Seq[(String, ProjectReference)] = Seq(
