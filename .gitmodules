@@ -169,3 +169,6 @@
 [submodule "am-kernels"]
 	path = am-kernels
 	url = git@github.com:NJU-ProjectN/am-kernels.git
+[submodule "DRAMsim3"]
+	path = DRAMsim3
+	url = git@github.com:0xzzj/DRAMsim3.git
