@@ -198,6 +198,11 @@ class L2LatencyMonitor(
       })
     }
 
+    def addOverflows(counter: UInt, increment: UInt): Bool = {
+      require(increment.getWidth <= counter.getWidth)
+      (counter +& increment)(counter.getWidth)
+    }
+
     val bucketCounters = RegInit(VecInit(Seq.fill(metric.categories)(
       VecInit(Seq.fill(BucketCount)(0.U(64.W))))))
     val totalEvents = RegInit(0.U(64.W))
@@ -242,13 +247,13 @@ class L2LatencyMonitor(
       for (category <- 0 until metric.categories; bucket <- 0 until BucketCount) {
         val increment = bucketIncrements(category)(bucket)
         bucketCounters(category)(bucket) := bucketCounters(category)(bucket) + increment
-        when (increment =/= 0.U && bucketCounters(category)(bucket) > ~increment.pad(64)) {
+        when (increment =/= 0.U && addOverflows(bucketCounters(category)(bucket), increment)) {
           counterOverflow := true.B
         }
       }
-      when ((totalIncrement =/= 0.U && totalEvents > ~totalIncrement.pad(64)) ||
-        (duplicateIncrement =/= 0.U && duplicateErrors > ~duplicateIncrement.pad(64)) ||
-        (missingIncrement =/= 0.U && missingErrors > ~missingIncrement.pad(64))) {
+      when ((totalIncrement =/= 0.U && addOverflows(totalEvents, totalIncrement)) ||
+        (duplicateIncrement =/= 0.U && addOverflows(duplicateErrors, duplicateIncrement)) ||
+        (missingIncrement =/= 0.U && addOverflows(missingErrors, missingIncrement))) {
         counterOverflow := true.B
       }
     }
