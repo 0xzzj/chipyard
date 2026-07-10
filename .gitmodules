@@ -163,3 +163,9 @@
 [submodule "generators/radiance"]
 	path = generators/radiance
 	url = https://github.com/ucb-bar/radiance.git
+[submodule "CoupledL2"]
+	path = CoupledL2
+	url = git@github.com:0xzzj/CoupledL2.git
+[submodule "am-kernels"]
+	path = am-kernels
+	url = git@github.com:NJU-ProjectN/am-kernels.git
